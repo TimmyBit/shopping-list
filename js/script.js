@@ -4,10 +4,16 @@ const itemList = document.querySelector('#item-list');
 const clear = document.querySelector('#clear');
 const itemFilter = document.querySelector('.filter');
 
-// Add Items
-function addItem (e) {
-    e.preventDefault();
+function displayItems () {
+    const itemsFromStorage = getItemsFromStorage();
+    itemsFromStorage.forEach((item) => addItemToDom(item));
+    checkUI();
+}
 
+// Add Items
+function onItemSubmit (e) {
+    e.preventDefault();
+    
     const newItem = itemInput.value;
     
     // Validate input
@@ -15,22 +21,32 @@ function addItem (e) {
         alert('Please enter an item');
         return;
     }
+    
+    // Create item DOM element
+    addItemToDom(newItem);
+    
+    // Add item to locat storage
+    addItemToStorage(newItem);
+    
+    checkUI();
+    
+    itemInput.value = '';
+}
 
+function addItemToDom (item) {
     // Create a list item
     const li = document.createElement('li');
-    li.appendChild(document.createTextNode(newItem));
-
+    li.appendChild(document.createTextNode(item));
+    
     const button = createButton('remove-item btn-link text-red');
     li.appendChild(button);
-
+    
+    // Add li to DOM
     itemList.appendChild(li);
-
-    itemInput.value = '';
-    checkUI();
 }
 
 function createButton(classes) {
-    const button = document.createElement('buttton');
+    const button = document.createElement('button');
     button.className = classes;
     const icon = createIcon('fa-solid fa-xmark');
     button.appendChild(icon);
@@ -41,6 +57,29 @@ function createIcon(classes) {
     const icon = document.createElement('i');
     icon.className = classes;
     return icon;
+}
+
+// Get items from storage
+function addItemToStorage (item) {
+    const itemsFromStorage = getItemsFromStorage();
+    
+    // Add new item  to array
+    itemsFromStorage.push(item);
+
+    // Convert to JSON string and set ti local storage
+    localStorage.setItem('items', JSON.stringify(itemsFromStorage));
+}
+
+function getItemsFromStorage () {
+    let itemsFromStorage;
+
+    if (localStorage.getItem('items') === null) {
+        itemsFromStorage = [];
+    } else {
+        itemsFromStorage = JSON.parse(localStorage.getItem('items'));
+    }
+
+    return itemsFromStorage;
 }
 
 // Remove an item
@@ -88,10 +127,14 @@ function checkUI () {
     }
 }
 
-// Event Listeners
-itemForm.addEventListener('submit', addItem);
-itemList.addEventListener('click', removeItem);
-clear.addEventListener('click', clearItems);
-itemFilter.addEventListener('input', filterItems);
+function init() {
+    // Event Listeners
+    itemForm.addEventListener('submit', onItemSubmit);
+    itemList.addEventListener('click', removeItem);
+    clear.addEventListener('click', clearItems);
+    itemFilter.addEventListener('input', filterItems);
+    document.addEventListener('DOMContentLoaded', displayItems);
+    checkUI();
+}
 
-checkUI();
+init();
