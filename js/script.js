@@ -66,7 +66,7 @@ function addItemToStorage (item) {
     // Add new item  to array
     itemsFromStorage.push(item);
 
-    // Convert to JSON string and set ti local storage
+    // Convert to JSON string and set to local storage
     localStorage.setItem('items', JSON.stringify(itemsFromStorage));
 }
 
@@ -82,21 +82,39 @@ function getItemsFromStorage () {
     return itemsFromStorage;
 }
 
-// Remove an item
-function removeItem (e) {
+function onClickItem(e) {
     if (e.target.parentElement.classList.contains('remove-item')) {
-        e.target.parentElement.parentElement.remove();
+        removeItem(e.target.parentElement.parentElement);
     }
+}
+
+function removeItem(item) {
+    item.remove();
+
+    removeItemFromStorage(item.textContent);
+
     checkUI();
 }
 
-// Clear all items
-function clearItems () {
+function removeItemFromStorage(item) {
+    let itemsFromStorage = getItemsFromStorage();
+
+    itemsFromStorage = itemsFromStorage.filter((i) => i !== item);
+
+    localStorage.setItem('items', JSON.stringify(itemsFromStorage));
+}
+
+function clearItems() {
     while (itemList.firstChild) {
         itemList.removeChild(itemList.firstChild);
     }
+
+    localStorage.removeItem('items');
+
     checkUI();
 }
+
+
 
 // Filter
 function filterItems (e) {
@@ -130,10 +148,11 @@ function checkUI () {
 function init() {
     // Event Listeners
     itemForm.addEventListener('submit', onItemSubmit);
-    itemList.addEventListener('click', removeItem);
+    itemList.addEventListener('click', onClickItem);
     clear.addEventListener('click', clearItems);
     itemFilter.addEventListener('input', filterItems);
     document.addEventListener('DOMContentLoaded', displayItems);
+    
     checkUI();
 }
 
