@@ -3,6 +3,8 @@ const itemInput = document.querySelector('#item-input');
 const itemList = document.querySelector('#item-list');
 const clear = document.querySelector('#clear');
 const itemFilter = document.querySelector('.filter');
+const formBtn = itemForm.querySelector('button');
+let isEditMode = false;
 
 /**
  * Displays items from local storage and checks UI status.
@@ -28,6 +30,16 @@ function onItemSubmit(e) {
     if (newItem === '') {
         alert('Please enter an item');
         return;
+    }
+
+    // Check for edit mode
+    if (isEditMode) {
+        const itemToEdit = itemList.querySelector('.edit-mode');
+
+        removeItemFromStorage(itemToEdit.textContent);
+        itemToEdit.classList.remove('edit-mode');
+        itemToEdit.remove();
+        isEditMode = false;
     }
 
     // Create item DOM element
@@ -74,7 +86,7 @@ function createButton(classes) {
  * Creates an icon element with the specified classes.
  *
  * @param {string} classes - The classes to be applied to the icon.
- * @returns {HTMLSpanElement} - The created icon element.
+ * @returns {HTMLElement} - The created icon element.
  */
 function createIcon(classes) {
     const icon = document.createElement('i');
@@ -96,7 +108,7 @@ function addItemToStorage(item) {
 /**
  * Retrieves all items from local storage.
  *
- * @returns {Array} - The list of items retrieved from local storage.
+ * @returns {string[]} - The list of item strings retrieved from local storage.
  */
 function getItemsFromStorage() {
     let itemsFromStorage;
@@ -109,14 +121,37 @@ function getItemsFromStorage() {
 }
 
 /**
- * Handles the click event to remove an item.
+ * Handles item click: removes item if the remove button is clicked,
+ * otherwise enters edit mode for the clicked item.
  *
  * @param {Event} e - The click event.
  */
 function onClickItem(e) {
     if (e.target.parentElement.classList.contains('remove-item')) {
         removeItem(e.target.parentElement.parentElement);
+    } else {
+        setItemToEdit(e.target);
     }
+}
+
+/**
+ * Enables edit mode for a selected list item.
+ * Highlights the item, updates the button to show edit state,
+ * and populates the input with the item's text.
+ *
+ * @param {HTMLElement} item - The list item to edit.
+ */
+function setItemToEdit(item) {
+    isEditMode = true;
+
+    itemList
+        .querySelectorAll('li')
+        .forEach((i) => i.classList.remove('edit-mode'));
+
+    item.classList.add('edit-mode');
+    formBtn.innerHTML = '<i class="fa-solid fa-pen"></i>  Update Item';
+    formBtn.style.backgroundColor = '#228B22';
+    itemInput.value = item.textContent;
 }
 
 /**
@@ -185,6 +220,11 @@ function checkUI() {
         clear.style.display = 'block';
         itemFilter.style.display = 'block';
     }
+
+    formBtn.innerHTML = '<i class = "fa-solid fa-plus"></i> Add Item';
+    formBtn.style.backgroundColor = '#333';
+
+    isEditMode = false;
 }
 
 /**
