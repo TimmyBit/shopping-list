@@ -7,7 +7,8 @@ const formBtn = itemForm.querySelector('button');
 let isEditMode = false;
 
 /**
- * Displays items from local storage and checks UI status.
+ * Retrieves items from local storage and displays them in the DOM.
+ * Also checks and updates UI elements based on current state.
  */
 function displayItems() {
     const itemsFromStorage = getItemsFromStorage();
@@ -16,52 +17,50 @@ function displayItems() {
 }
 
 /**
- * Handles the form submission to add a new item.
- * Validates the input and updates the DOM and local storage.
+ * Handles the form submission event to add or update an item.
+ * Prevents default behavior, validates input, and manages edit state.
  *
- * @param {Event} e - The form submit event.
+ * @param {Event} e - The form submission event.
  */
 function onItemSubmit(e) {
     e.preventDefault();
 
-    const newItem = itemInput.value;
+    const newItem = itemInput.value.trim();
 
-    // Validate input
     if (newItem === '') {
         alert('Please enter an item');
         return;
     }
 
-    // Check for edit mode
+    if (!isEditMode && checkIfItemExists(newItem)) {
+        alert('That item already exists!');
+        return;
+    }
+
     if (isEditMode) {
         const itemToEdit = itemList.querySelector('.edit-mode');
+        const originalName = itemToEdit.textContent.trim();
 
-        removeItemFromStorage(itemToEdit.textContent);
-        itemToEdit.classList.remove('edit-mode');
-        itemToEdit.remove();
-        isEditMode = false;
-    } else {
-        if (checkIfItemExists(newItem)) {
+        if (originalName !== newItem && checkIfItemExists(newItem)) {
             alert('That item already exists!');
             return;
         }
+
+        removeItemFromStorage(originalName);
+        itemToEdit.remove();
+        isEditMode = false;
     }
 
-    // Create item DOM element
     addItemToDom(newItem);
-
-    // Add item to local storage
     addItemToStorage(newItem);
-
     checkUI();
-
     itemInput.value = '';
 }
 
 /**
- * Creates a new list item, appends the input value, and adds a remove button.
+ * Creates and appends a new list item to the DOM.
  *
- * @param {string} item - The text content of the new list item.
+ * @param {string} item - The text content of the item to add.
  */
 function addItemToDom(item) {
     const li = document.createElement('li');
@@ -74,10 +73,10 @@ function addItemToDom(item) {
 }
 
 /**
- * Creates a button element with specified classes and an icon.
+ * Creates a button element with specified classes and a close icon.
  *
- * @param {string} classes - The classes to be applied to the button.
- * @returns {HTMLButtonElement} - The created button element.
+ * @param {string} classes - The CSS classes to apply to the button.
+ * @returns {HTMLButtonElement} - The generated button element.
  */
 function createButton(classes) {
     const button = document.createElement('button');
@@ -88,10 +87,10 @@ function createButton(classes) {
 }
 
 /**
- * Creates an icon element with the specified classes.
+ * Creates an icon element with given classes.
  *
- * @param {string} classes - The classes to be applied to the icon.
- * @returns {HTMLElement} - The created icon element.
+ * @param {string} classes - The CSS classes to apply to the icon.
+ * @returns {HTMLElement} - The generated icon element.
  */
 function createIcon(classes) {
     const icon = document.createElement('i');
@@ -100,9 +99,9 @@ function createIcon(classes) {
 }
 
 /**
- * Adds an item to local storage.
+ * Saves a new item to local storage.
  *
- * @param {string} item - The item to be added to storage.
+ * @param {string} item - The item text to be stored.
  */
 function addItemToStorage(item) {
     const itemsFromStorage = getItemsFromStorage();
@@ -111,9 +110,9 @@ function addItemToStorage(item) {
 }
 
 /**
- * Retrieves all items from local storage.
+ * Retrieves all stored items from local storage.
  *
- * @returns {string[]} - The list of item strings retrieved from local storage.
+ * @returns {string[]} - An array of stored item strings.
  */
 function getItemsFromStorage() {
     let itemsFromStorage;
@@ -126,8 +125,8 @@ function getItemsFromStorage() {
 }
 
 /**
- * Handles item click: removes item if the remove button is clicked,
- * otherwise enters edit mode for the clicked item.
+ * Handles click events on the item list.
+ * Determines if an item is being removed or edited.
  *
  * @param {Event} e - The click event.
  */
@@ -139,17 +138,22 @@ function onClickItem(e) {
     }
 }
 
+/**
+ * Checks if a given item already exists in local storage.
+ *
+ * @param {string} item - The item to check for.
+ * @returns {boolean} - True if item exists, otherwise false.
+ */
 function checkIfItemExists(item) {
     const itemsFromStorage = getItemsFromStorage();
     return itemsFromStorage.includes(item);
 }
 
 /**
- * Enables edit mode for a selected list item.
- * Highlights the item, updates the button to show edit state,
- * and populates the input with the item's text.
+ * Enables editing mode for the selected list item.
+ * Updates UI and form state accordingly.
  *
- * @param {HTMLElement} item - The list item to edit.
+ * @param {HTMLElement} item - The list item element to edit.
  */
 function setItemToEdit(item) {
     isEditMode = true;
@@ -161,24 +165,26 @@ function setItemToEdit(item) {
     item.classList.add('edit-mode');
     formBtn.innerHTML = '<i class="fa-solid fa-pen"></i>  Update Item';
     formBtn.style.backgroundColor = '#228B22';
-    itemInput.value = item.textContent;
+    itemInput.value = item.textContent.trim();
+    itemInput.focus();
 }
 
 /**
- * Removes an item from the DOM and local storage.
+ * Removes a list item from the DOM and storage.
  *
- * @param {HTMLElement} item - The list item to remove.
+ * @param {HTMLElement} item - The list item element to remove.
  */
 function removeItem(item) {
+    const itemText = item.textContent.trim();
     item.remove();
-    removeItemFromStorage(item.textContent);
+    removeItemFromStorage(itemText);
     checkUI();
 }
 
 /**
- * Removes an item from local storage.
+ * Removes a specific item from local storage.
  *
- * @param {string} item - The item to remove from storage.
+ * @param {string} item - The item to remove.
  */
 function removeItemFromStorage(item) {
     let itemsFromStorage = getItemsFromStorage();
@@ -187,7 +193,7 @@ function removeItemFromStorage(item) {
 }
 
 /**
- * Clears all items from the DOM and local storage.
+ * Clears all items from the list and local storage.
  */
 function clearItems() {
     while (itemList.firstChild) {
@@ -198,9 +204,9 @@ function clearItems() {
 }
 
 /**
- * Filters the list items based on user input.
+ * Filters visible items based on text input.
  *
- * @param {Event} e - The input event from the filter text box.
+ * @param {Event} e - The input event from the filter field.
  */
 function filterItems(e) {
     const items = itemList.querySelectorAll('li');
@@ -217,8 +223,8 @@ function filterItems(e) {
 }
 
 /**
- * Updates the UI based on the number of items in the list.
- * Hides or shows the filter and clear buttons accordingly.
+ * Updates UI elements based on the state of the item list.
+ * Resets form to default "Add" mode if not editing.
  */
 function checkUI() {
     const items = itemList.querySelectorAll('li');
@@ -231,17 +237,16 @@ function checkUI() {
         itemFilter.style.display = 'block';
     }
 
-    formBtn.innerHTML = '<i class = "fa-solid fa-plus"></i> Add Item';
+    formBtn.innerHTML = '<i class="fa-solid fa-plus"></i> Add Item';
     formBtn.style.backgroundColor = '#333';
-
     isEditMode = false;
 }
 
 /**
- * Initializes the application by setting up event listeners and UI checks.
+ * Initializes the application.
+ * Sets up event listeners and initial UI state.
  */
 function init() {
-    // Event Listeners
     itemForm.addEventListener('submit', onItemSubmit);
     itemList.addEventListener('click', onClickItem);
     clear.addEventListener('click', clearItems);
